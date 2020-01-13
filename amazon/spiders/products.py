@@ -25,12 +25,13 @@ class ProductsSpider(Spider):
         yield Request(absolute_url, callback=self.parse_list)
 
     def parse_list(self, response):
-        results = response.xpath(self.asin_selector).extract()
+        results = response.css('.s-result-item')
         for asin in results:
-            absolute_url = '{}/dp/{}'.format(self.start_urls[0], asin)
+            asi = asin.css("::attr(data-asin)").extract_first()
+            absolute_url = '{}/dp/{}'.format(self.start_urls[0], asi)
             yield Request(absolute_url, callback=self.parse_product)
 
-        next_page = response.xpath('//*[@title="Next Page"]/@href').extract_first()
+        next_page = response.css('.a-last > a ::attr(href)').extract_first()
         if next_page is not None:
             next_page_url = response.urljoin(next_page)
             yield Request(next_page_url, callback=self.parse_list)
